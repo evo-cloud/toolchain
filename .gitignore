@@ -1,0 +1,10 @@
+_*
+*.log
+*.out
+*.gen.go
+bin
+out
+tmp
+.hmake
+/vendor/*
+!/vendor/manifest

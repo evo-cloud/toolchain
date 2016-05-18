@@ -1,0 +1,26 @@
+---
+format: hypermake.v0
+name: toolchain
+
+targets:
+  all:
+    description: default target
+    after:
+      - 'all-*'
+
+  clean:
+    description: remove tmp files
+    after:
+      - 'clean-*'
+
+  distclean:
+    description: remove all output files
+    after:
+      - clean
+      - 'distclean-*'
+
+settings:
+  default-targets: [all]
+
+includes:
+  - '**/**/*.hmake'

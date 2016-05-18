@@ -1,0 +1,126 @@
+---
+format: hypermake.v0
+
+name: alpine
+
+targets:
+  alpine-builder:
+    description: base image with tools
+    build: builder
+    watches:
+      - builder
+
+  alpine-base-rootfs-armhf:
+    description: build base rootfs for armhf
+    after:
+      - alpine-builder
+    watches:
+      - bootstrap.sh
+      - docker/base-armhf.Dockerfile
+    user: root
+    cmds:
+      - ./bootstrap.sh armhf
+
+  alpine-base-rootfs-x86_64:
+    description: build base rootfs for x86_64
+    after:
+      - alpine-builder
+    watches:
+      - bootstrap.sh
+      - docker/base-x86_64.Dockerfile
+    user: root
+    cmds:
+      - ./bootstrap.sh x86_64
+
+  alpine-base-docker-armhf:
+    description: docker image for armhf
+    after:
+      - alpine-base-rootfs-armhf
+    watches:
+      - docker/base-armhf.Dockerfile
+    build: out/armhf
+    image: evocloud/alpine-base:3.3-armhf
+
+  alpine-base-docker-x86_64:
+    description: docker image for x86_64
+    after:
+      - alpine-base-rootfs-x86_64
+    watches:
+      - docker/base-x86_64.Dockerfile
+    build: out/x86_64
+    image: evocloud/alpine-base:3.3-x86_64
+
+  alpine-docker-armhf:
+    description: docker image with common tools for armhf
+    after:
+      - alpine-base-docker-armhf
+    watches:
+      - docker/common-armhf.Dockerfile
+    build: docker/common-armhf.Dockerfile
+    image: evocloud/alpine:3.3-armhf
+
+  alpine-docker-x86_64:
+    description: docker image with common tools for x86_64
+    after:
+      - alpine-base-docker-x86_64
+    watches:
+      - docker/common-x86_64.Dockerfile
+    build: docker/common-x86_64.Dockerfile
+    image: evocloud/alpine:3.3-x86_64
+
+  alpine-dev-docker-armhf:
+    description: docker image with common tools for armhf
+    after:
+      - alpine-docker-armhf
+    watches:
+      - docker/dev-armhf.Dockerfile
+    build: docker/dev-armhf.Dockerfile
+    image: evocloud/alpine-dev:3.3-armhf
+
+  alpine-dev-docker-x86_64:
+    description: docker image with common tools for x86_64
+    after:
+      - alpine-docker-x86_64
+    watches:
+      - docker/dev-x86_64.Dockerfile
+    build: docker/dev-x86_64.Dockerfile
+    image: evocloud/alpine-dev:3.3-x86_64
+
+  alpine-rootfs:
+    description: build base rootfs for all architectures
+    after:
+      - alpine-base-rootfs-armhf
+      - alpine-base-rootfs-x86_64
+
+  alpine-docker:
+    description: build docker images for all architectures
+    after:
+      - alpine-base-docker-armhf
+      - alpine-base-docker-x86_64
+      - alpine-docker-armhf
+      - alpine-docker-x86_64
+      - alpine-dev-docker-armhf
+      - alpine-dev-docker-x86_64
+
+  all-alpine:
+    description: default target
+    after:
+      - alpine-docker
+
+  clean-alpine:
+    description: clean up tmp files
+    user: root
+    cmds:
+      - rm -fr tmp
+
+  distclean-alpine:
+    description: clean up everything
+    after:
+      - clean-alpine
+    user: root
+    cmds:
+      - rm -fr out
+
+local:
+  docker:
+    image: evocloud/alpine-builder:local
